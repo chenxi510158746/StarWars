@@ -9,10 +9,51 @@
 import UIKit
 import SceneKit
 import ARKit
+import ReplayKit
 
-class ViewController: UIViewController, SCNPhysicsContactDelegate{
+class ViewController: UIViewController, SCNPhysicsContactDelegate, RPPreviewViewControllerDelegate{
 
+    var isOpen:Bool! = false
+    
     @IBOutlet weak var arscnView: ARSCNView!
+    
+    @IBOutlet weak var replayBtn: UIButton!
+    
+    @IBAction func runReplay(_ sender: UIButton) {
+        let recorder = RPScreenRecorder.shared()
+        
+        if isOpen {
+            self.isOpen = false
+            sender.setTitle("启动录制", for: .normal)
+            sender.tintColor = UIColor.white
+            sender.backgroundColor = UIColor.green
+            recorder.stopRecording(handler: { (previewViewController, error) in
+                if error != nil {
+                    print(error?.localizedDescription ?? "停止错误！")
+                } else {
+                    previewViewController?.previewControllerDelegate = self;
+                    self.present(previewViewController!, animated: true, completion: {
+                        
+                    })
+                    
+                }
+            })
+            
+        } else {
+            self.isOpen = true
+            sender.setTitle("正在录制", for: .normal)
+            sender.tintColor = UIColor.white
+            sender.backgroundColor = UIColor.red
+            recorder.startRecording(handler: { (error) in
+                if error != nil {
+                    print(error?.localizedDescription ?? "开始错误！")
+                } else {
+                    
+                }
+            })
+            
+        }
+    }
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -34,6 +75,9 @@ class ViewController: UIViewController, SCNPhysicsContactDelegate{
             arscnView.addShip()
         }
         
+        replayBtn.setTitle("启动录制", for: .normal)
+        replayBtn.tintColor = UIColor.white
+        replayBtn.backgroundColor = UIColor.green
     }
     
     @objc func tapClick() {
@@ -93,6 +137,18 @@ class ViewController: UIViewController, SCNPhysicsContactDelegate{
             self.removeNodeDynamic(node: contact.nodeA, isExplode: true)
             
             self.arscnView.addShip()
+        }
+    }
+    
+    func previewControllerDidFinish(_ previewController: RPPreviewViewController) {
+        previewController.dismiss(animated: true) {
+            
+        }
+    }
+    
+    func previewController(_ previewController: RPPreviewViewController, didFinishWithActivityTypes activityTypes: Set<String>) {
+        previewController.dismiss(animated: true) {
+            
         }
     }
     
